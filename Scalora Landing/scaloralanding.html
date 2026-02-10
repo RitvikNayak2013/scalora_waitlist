@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Scalora | The AI for Founders</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&family=Reenie+Beanie&display=swap"
+    rel="stylesheet">
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+  <style>
+    /* --- VARIABLES --- */
+    :root {
+      --bg: #FAFAF9;
+      --text: #171717;
+      --text-muted: #737373;
+      --accent: #2563EB;
+      --highlight: #FDE047;
+      --font-ui: 'Inter', sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+      --font-hand: 'Reenie Beanie', cursive;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      cursor: none;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-ui);
+      overflow-x: hidden;
+      width: 100vw;
+      transition: background 0.5s;
+    }
+
+    /* Focus Mode */
+    body.focus-mode {
+      background: #e5e5e5;
+    }
+
+    body.focus-mode .hero h1,
+    body.focus-mode .hero p,
+    body.focus-mode .sticker,
+    body.focus-mode .mockup-scene {
+      opacity: 0.3;
+      filter: blur(2px);
+      transition: all 0.5s;
+    }
+
+    /* --- 1. AMBIENCE --- */
+    .noise {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      pointer-events: none;
+      opacity: 0.04;
+      background: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E");
+    }
+
+    .grid-bg {
+      position: fixed;
+      inset: -50%;
+      width: 200%;
+      height: 200%;
+      z-index: -1;
+      background-image:
+        linear-gradient(rgba(0, 0, 0, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 0, 0, 0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      transform-style: preserve-3d;
+      /* Initial transform set by JS */
+      transition: transform 0.1s ease-out;
+    }
+
+    /* --- 2. CURSOR --- */
+    .cursor-dot {
+      width: 6px;
+      height: 6px;
+      background: #000;
+      position: fixed;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 10000;
+    }
+
+    .cursor-circle {
+      width: 30px;
+      height: 30px;
+      border: 1px solid rgba(0, 0, 0, 0.2);
+      position: fixed;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 10000;
+      transition: width 0.3s, height 0.3s, background 0.3s, border-color 0.3s;
+      /* Smooth follow is handled in JS */
+    }
+
+    body.hovering .cursor-circle {
+      width: 60px;
+      height: 60px;
+      background: rgba(0, 0, 0, 0.03);
+      border-color: transparent;
+      backdrop-filter: blur(2px);
+    }
+
+    /* --- 3. HERO --- */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding-top: 150px;
+      padding-bottom: 100px;
+      position: relative;
+    }
+
+    h1 {
+      font-size: clamp(3rem, 6vw, 5.5rem);
+      line-height: 1.1;
+      text-align: center;
+      letter-spacing: -0.03em;
+      margin-bottom: 32px;
+      z-index: 2;
+      color: var(--text);
+    }
+
+    .dynamic-line {
+      display: block;
+      height: 1.2em;
+      overflow: visible;
+      margin-top: 10px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .highlight-box {
+      background: var(--highlight);
+      padding: 0 16px;
+      display: inline-block;
+      transform: skew(-2deg);
+      border-radius: 4px;
+      position: relative;
+    }
+
+    .typewriter::after {
+      content: '|';
+      animation: blink 1s infinite;
+      font-weight: 300;
+      position: absolute;
+      right: 4px;
+    }
+
+    .subtitle {
+      font-size: 1.2rem;
+      color: var(--text-muted);
+      text-align: center;
+      /* UPDATED: Increased width from 500px to 640px */
+      max-width: 640px;
+      line-height: 1.6;
+      margin-bottom: 60px;
+    }
+
+    /* --- INPUT --- */
+    .input-wrapper {
+      position: relative;
+      margin-bottom: 100px;
+      z-index: 200;
+    }
+
+    .waitlist-form {
+      background: #fff;
+      padding: 8px;
+      border-radius: 100px;
+      border: 1px solid #e5e5e5;
+      display: flex;
+      gap: 8px;
+      box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.08);
+      position: relative;
+      transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.27), box-shadow 0.3s;
+    }
+
+    /* Glow Ring Effect */
+    .waitlist-form::before {
+      content: '';
+      position: absolute;
+      inset: -4px;
+      border-radius: 100px;
+      background: linear-gradient(45deg, var(--accent), #93C5FD, var(--highlight));
+      z-index: -1;
+      opacity: 0;
+      transition: opacity 0.4s;
+      filter: blur(8px);
+    }
+
+    .waitlist-form:hover {
+      transform: scale(1.02);
+      box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.12);
+    }
+
+    .waitlist-form:focus-within {
+      transform: scale(1.05);
+      border-color: transparent;
+    }
+
+    .waitlist-form:focus-within::before {
+      opacity: 0.6;
+    }
+
+    input {
+      border: none;
+      outline: none;
+      background: transparent;
+      padding: 14px 24px;
+      font-family: var(--font-mono);
+      font-size: 1rem;
+      color: var(--text);
+      min-width: 300px;
+    }
+
+    button {
+      background: #171717;
+      color: #fff;
+      border: none;
+      padding: 12px 32px;
+      border-radius: 100px;
+      font-weight: 600;
+      font-family: var(--font-ui);
+      cursor: none;
+      transition: transform 0.2s, background 0.2s;
+    }
+
+    button:hover {
+      background: #000;
+      transform: scale(1.05);
+    }
+
+    /* ARROW UPDATE */
+    .arrow-container {
+      position: absolute;
+      left: -240px;
+      /* Shifted left to fit text */
+      top: -10px;
+      font-family: var(--font-hand);
+      color: #444;
+      transform: rotate(-6deg);
+      opacity: 0.9;
+      width: 220px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      text-align: right;
+      pointer-events: none;
+    }
+
+    .arrow-text {
+      font-size: 1.1rem;
+      line-height: 1.1;
+      margin-bottom: 5px;
+      margin-right: 10px;
+    }
+
+    .arrow-container svg {
+      width: 60px;
+      height: 30px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 1.5;
+      margin-right: -20px;
+      /* Point closer to input */
+    }
+
+    /* --- INTERACTIVE MOCKUP --- */
+    .mockup-scene {
+      perspective: 1200px;
+      /* Depth for 3D tilt */
+      width: 90%;
+      max-width: 1000px;
+      position: relative;
+      z-index: 10;
+      padding: 20px;
+      /* Space for rotation */
+    }
+
+    .glass-panel {
+      background: rgba(255, 255, 255, 0.6);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.8);
+      border-radius: 16px;
+      box-shadow:
+        0 20px 60px -15px rgba(0, 0, 0, 0.15),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.5);
+
+      /* 3D Transform Logic */
+      transform-style: preserve-3d;
+      will-change: transform;
+      /* Initial State */
+      transform: rotateX(10deg) rotateY(0deg);
+
+      overflow: hidden;
+      padding-top: 36px;
+      position: relative;
+    }
+
+    /* Dynamic Lighting Overlay */
+    .glass-panel::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+          rgba(255, 255, 255, 0.4) 0%,
+          transparent 60%);
+      pointer-events: none;
+      z-index: 10;
+      mix-blend-mode: overlay;
+    }
+
+    .lights {
+      position: absolute;
+      top: 14px;
+      left: 16px;
+      display: flex;
+      gap: 8px;
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #e5e5e5;
+    }
+
+    .dot.r {
+      background: #FF5F57;
+    }
+
+    .dot.y {
+      background: #FEBC2E;
+    }
+
+    .dot.g {
+      background: #28C840;
+    }
+
+    .mockup-img {
+      width: 100%;
+      display: block;
+      background: #fff;
+      border-top: 1px solid #f0f0f0;
+    }
+
+    /* --- STICKY NOTES --- */
+    .sticker {
+      position: absolute;
+      padding: 18px 24px;
+      background: #fff;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+      border: 1px solid rgba(0, 0, 0, 0.05);
+      font-family: var(--font-hand);
+      font-size: 1.4rem;
+      line-height: 1.1;
+      transform-origin: center;
+      z-index: 5;
+      transition: transform 0.1s cubic-bezier(0.1, 0.9, 0.2, 1);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .sticker:hover {
+      transform: scale(1.1) !important;
+      z-index: 50;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+    }
+
+    .sticker i {
+      font-size: 1.2rem;
+    }
+
+    .s1 {
+      top: 18%;
+      left: 8%;
+      background: #FEF3C7;
+      transform: rotate(-4deg);
+    }
+
+    .s2 {
+      top: 22%;
+      right: 8%;
+      background: #DCFCE7;
+      transform: rotate(3deg);
+    }
+
+    .s3 {
+      top: 55%;
+      left: 5%;
+      background: #FEE2E2;
+      transform: rotate(5deg);
+    }
+
+    .s4 {
+      top: 60%;
+      right: 12%;
+      background: #DBEAFE;
+      transform: rotate(-2deg);
+    }
+
+    /* ANIMATIONS */
+    @keyframes blink {
+      50% {
+        opacity: 0;
+      }
+    }
+
+    @keyframes shake {
+
+      0%,
+      100% {
+        transform: translateX(0);
+      }
+
+      25% {
+        transform: translateX(-4px);
+      }
+
+      75% {
+        transform: translateX(4px);
+      }
+    }
+
+    /* Responsive */
+    @media (max-width: 900px) {
+
+      .sticker,
+      .arrow-container {
+        display: none;
+      }
+
+      h1 {
+        font-size: 3.5rem;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="noise"></div>
+  <div class="grid-bg" id="grid"></div>
+  <div class="cursor-dot"></div>
+  <div class="cursor-circle"></div>
+
+  <div class="sticker s1 interactable" data-speed="0.05">
+    <span><i class="ph-bold ph-trend-up"></i> Growth</span>
+    <span style="font-size:1rem; color:#555">MRR is up 12%<br>this month.</span>
+  </div>
+
+  <div class="sticker s2 interactable" data-speed="0.08">
+    <span><i class="ph-bold ph-check-circle"></i> Tasks</span>
+    <span style="font-size:1rem; color:#555">Email VCs about<br>seed round.</span>
+  </div>
+
+  <div class="sticker s3 interactable" data-speed="0.03">
+    <span><i class="ph-bold ph-warning"></i> Alert</span>
+    <span style="font-size:1rem; color:#555">Burn rate high.<br>Check AWS bill.</span>
+  </div>
+
+  <div class="sticker s4 interactable" data-speed="0.06">
+    <span><i class="ph-bold ph-users"></i> Team</span>
+    <span style="font-size:1rem; color:#555">Sync meeting<br>@ 10:00 AM</span>
+  </div>
+
+  <section class="hero">
+    <h1>
+      The AI for your<br>
+      <span class="dynamic-line">
+        <span class="highlight-box">
+          <span id="typewriter" class="typewriter"></span>
+        </span>
+      </span>
+    </h1>
+
+    <p class="subtitle">
+      Scalora is your startup’s operating system—powered by Scale, an AI that continuously tracks burn rate and key
+      metrics.
+      <span style="color: var(--text); font-weight: 500;">Ask anything about growing your startup. Anytime.</span>
+    </p>
+    </p>
+
+    <div class="input-wrapper interactable">
+      <div class="arrow-container">
+        <span class="arrow-text">
+          Join the waitlist for early access, priority in internships, and beta testing
+        </span>
+        <svg viewBox="0 0 100 50">
+          <path d="M10,10 Q50,5 80,30" />
+          <path d="M80,30 L70,20 M80,30 L70,40" />
+        </svg>
+      </div>
+
+      <form class="waitlist-form" id="waitlistForm" onsubmit="handleSubmit(event)">
+        <input type="email" name="email" id="emailInput" placeholder="founder@company.com" required class="mag-target">
+        <button type="submit" id="join-btn" class="mag-target">Join Alpha</button>
+      </form>
+    </div>
+
+    <div class="mockup-scene">
+      <div class="glass-panel interactable" id="glassPanel">
+        <div class="lights">
+          <div class="dot r"></div>
+          <div class="dot y"></div>
+          <div class="dot g"></div>
+        </div>
+
+        <img src="scalora.png" alt="Dashboard" class="mockup-img"
+          onerror="this.style.display='none'; this.nextElementSibling.style.display='grid'">
+
+        <div style="height:500px; display:none; place-items:center; background:#f9fafb; color:#ccc;" class="fallback">
+          <div style="text-align:center">scalora.png<br><span style="font-size:0.8rem">Image missing</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    // --- TYPEWRITER ---
+    const phrases = ["Startup.", "Founding Journey.", "Next Big Idea.", "Roadmap.", "Strategy."];
+    let phraseIndex = 0;
+    const target = document.getElementById("typewriter");
+
+    function type() {
+      const text = phrases[phraseIndex % phrases.length];
+      let charIndex = 0;
+      target.innerHTML = "";
+      const interval = setInterval(() => {
+        target.innerHTML += text.charAt(charIndex);
+        charIndex++;
+        if (charIndex >= text.length) { clearInterval(interval); setTimeout(erase, 2000); }
+      }, 100);
+    }
+    function erase() {
+      let content = target.innerHTML;
+      const interval = setInterval(() => {
+        content = content.substring(0, content.length - 1);
+        target.innerHTML = content;
+        if (content.length === 0) { clearInterval(interval); phraseIndex++; type(); }
+      }, 50);
+    }
+    setTimeout(type, 800);
+
+    // --- FOCUS MODE ---
+    const emailInput = document.getElementById('emailInput');
+    emailInput.addEventListener('focus', () => document.body.classList.add('focus-mode'));
+    emailInput.addEventListener('blur', () => document.body.classList.remove('focus-mode'));
+
+    // --- INTERACTIVE MOUSE ENGINE ---
+    const dot = document.querySelector('.cursor-dot');
+    const circle = document.querySelector('.cursor-circle');
+    const stickers = document.querySelectorAll('.sticker');
+    const grid = document.getElementById('grid');
+    const glassPanel = document.getElementById('glassPanel');
+
+    // Mouse state
+    let mx = 0, my = 0; // Mouse real position
+    let cx = 0, cy = 0; // Cursor circle position (lagged)
+
+    window.addEventListener('mousemove', (e) => {
+      mx = e.clientX;
+      my = e.clientY;
+
+      // 1. Move Cursor Dot Instantly
+      dot.style.transform = `translate(${mx - 3}px, ${my - 3}px)`;
+
+      // 2. Parallax Stickers
+      stickers.forEach(s => {
+        if (s.classList.contains('dragging')) return; // Don't parallax if dragging
+        const speed = parseFloat(s.dataset.speed);
+        const x = (window.innerWidth - mx * speed) / 90;
+        const y = (window.innerHeight - my * speed) / 90;
+
+        // Preserve original rotation
+        let rotate = 'rotate(0deg)';
+        if (s.classList.contains('s1')) rotate = 'rotate(-4deg)';
+        if (s.classList.contains('s2')) rotate = 'rotate(3deg)';
+        if (s.classList.contains('s3')) rotate = 'rotate(5deg)';
+        if (s.classList.contains('s4')) rotate = 'rotate(-2deg)';
+
+        s.style.transform = `translate(${x}px, ${y}px) ${rotate}`;
+      });
+
+      // 3. Interactive Grid Background (Tilt & Pan)
+      const centerX = window.innerWidth / 2;
+      const centerY = window.innerHeight / 2;
+      const percentX = (mx - centerX) / centerX; // -1 to 1
+      const percentY = (my - centerY) / centerY; // -1 to 1
+
+      // Grid moves slightly opposite to mouse and tilts
+      grid.style.transform = `perspective(500px) rotateX(${20 + (percentY * 2)}deg) rotateY(${percentX * 2}deg) translateX(${percentX * 10}px) translateY(${percentY * 10}px)`;
+
+      // 4. Interactive Glass Panel (3D Tilt)
+      // We want the card to look "at" the mouse, or tilt away from it. 
+      // Let's make it tilt *towards* the mouse (Apple TV style).
+      // RotateX: Mouse Up -> Tilt Up (Negative Deg). Mouse Down -> Tilt Down (Positive Deg)
+      const tiltX = -percentY * 5; // Max 5 deg tilt
+      const tiltY = percentX * 5;  // Max 5 deg tilt
+
+      glassPanel.style.transform = `rotateX(${10 + tiltX}deg) rotateY(${tiltY}deg)`;
+
+      // 5. Dynamic Lighting (Gloss Effect)
+      // Update CSS variables for the pseudo-element gradient
+      glassPanel.style.setProperty('--mouse-x', `${(percentX + 1) * 50}%`);
+      glassPanel.style.setProperty('--mouse-y', `${(percentY + 1) * 50}%`);
+
+      // 6. Check Hover Targets for Cursor
+      const target = e.target.closest('.interactable, .mag-target, a, button, input');
+      if (target) {
+        document.body.classList.add('hovering');
+      } else {
+        document.body.classList.remove('hovering');
+      }
+    });
+
+    // Smooth Cursor Circle Animation Loop
+    function animate() {
+      cx += (mx - cx) * 0.15;
+      cy += (my - cy) * 0.15;
+      circle.style.transform = `translate(${cx - 15}px, ${cy - 15}px)`;
+      requestAnimationFrame(animate);
+    }
+    animate();
+
+    // --- DRAGGABLES ---
+    let dragged = null;
+    let dragOffsetX, dragOffsetY;
+
+    stickers.forEach(el => {
+      el.addEventListener('mousedown', (e) => {
+        dragged = el;
+        el.classList.add('dragging');
+        const rect = el.getBoundingClientRect();
+        dragOffsetX = e.clientX - rect.left;
+        dragOffsetY = e.clientY - rect.top;
+        el.style.zIndex = 1000;
+        el.style.transition = 'none'; // Instant movement
+      });
+    });
+
+    window.addEventListener('mouseup', () => {
+      if (dragged) {
+        dragged.style.transition = 'transform 0.1s cubic-bezier(0.1, 0.9, 0.2, 1)'; // Restore smoothing
+        dragged.classList.remove('dragging');
+        dragged = null;
+      }
+    });
+
+    window.addEventListener('mousemove', (e) => {
+      if (!dragged) return;
+      e.preventDefault();
+      // Calculate absolute position
+      const x = e.clientX - dragOffsetX;
+      const y = e.clientY - dragOffsetY;
+
+      // We need to override the parallax translate, but keep it fixed relative to viewport
+      dragged.style.left = x + "px";
+      dragged.style.top = y + "px";
+      dragged.style.transform = "scale(1.1) rotate(0deg)";
+    });
+
+    // --- BACKEND CONNECTION (Google Sheets via SheetMonkey) ---
+    function handleSubmit(e) {
+      e.preventDefault();
+      const btn = document.getElementById('join-btn');
+      const input = document.getElementById('emailInput');
+      const form = document.getElementById('waitlistForm');
+
+      // 1. UI Loading State
+      const originalText = btn.innerText;
+      btn.innerText = "Saving...";
+      btn.style.opacity = "0.7";
+
+      // 2. Prepare Data
+      // *** PASTE YOUR SHEETMONKEY URL BELOW ***
+      const endpoint = "https://api.sheetmonkey.io/form/8ZCQpQh8CPFchXovmGZ8Pk";
+
+      const formData = new FormData(form);
+
+      // 3. Send Data
+      fetch(endpoint, {
+        method: "POST",
+        body: formData
+      })
+        .then(response => {
+          if (response.ok) {
+            // 4. Success Animation
+            btn.innerHTML = "You're on the list! <i class='ph-bold ph-check'></i>";
+            btn.style.background = "#16a34a";
+            btn.style.opacity = "1";
+            btn.style.animation = "shake 0.4s ease-in-out";
+
+            input.value = "";
+            input.placeholder = "We'll be in touch soon.";
+            input.disabled = true;
+            document.body.classList.remove('focus-mode');
+          } else {
+            throw new Error('Submission failed');
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          btn.innerText = "Error. Try again.";
+          btn.style.background = "#dc2626";
+          setTimeout(() => {
+            btn.innerText = originalText;
+            btn.style.background = "#171717";
+          }, 3000);
+        });
+    }
+  </script>
+</body>
+
+</html>
