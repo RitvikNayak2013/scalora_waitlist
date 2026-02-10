@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Scalora | The Intelligent Notebook</title>
+  <title>Scalora | The AI for Founders</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link
@@ -13,20 +13,16 @@
   <script src="https://unpkg.com/@phosphor-icons/web"></script>
 
   <style>
-    /* --- 0. VARS & RESET --- */
+    /* --- VARIABLES --- */
     :root {
       --bg: #FAFAF9;
-      /* Stone-50 */
-      --grid: #E7E5E4;
-      /* Stone-200 */
-      --text-main: #1C1917;
-      --text-muted: #57534E;
-      --accent-blue: #2563EB;
-      --accent-marker: rgba(253, 224, 71, 0.6);
+      --text: #171717;
+      --text-muted: #737373;
+      --accent: #2563EB;
+      --highlight: #FDE047;
       --font-ui: 'Inter', sans-serif;
       --font-mono: 'JetBrains Mono', monospace;
       --font-hand: 'Reenie Beanie', cursive;
-      --ease-out: cubic-bezier(0.215, 0.61, 0.355, 1);
     }
 
     * {
@@ -36,52 +32,59 @@
       cursor: none;
     }
 
-    ::selection {
-      background: var(--accent-marker);
-      color: black;
-    }
-
     body {
-      background-color: var(--bg);
-      color: var(--text-main);
+      background: var(--bg);
+      color: var(--text);
       font-family: var(--font-ui);
       overflow-x: hidden;
       width: 100vw;
+      transition: background 0.5s;
+    }
+
+    /* Focus Mode */
+    body.focus-mode {
+      background: #e5e5e5;
+    }
+
+    body.focus-mode .hero h1,
+    body.focus-mode .hero p,
+    body.focus-mode .sticker,
+    body.focus-mode .mockup-scene {
+      opacity: 0.3;
+      filter: blur(2px);
+      transition: all 0.5s;
     }
 
     /* --- 1. AMBIENCE --- */
     .noise {
       position: fixed;
       inset: 0;
+      z-index: 9999;
       pointer-events: none;
-      z-index: 999;
-      opacity: 0.05;
-      background: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E");
+      opacity: 0.04;
+      background: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E");
     }
 
-    .grid-layer {
+    .grid-bg {
       position: fixed;
-      inset: -50px;
+      inset: -50%;
+      width: 200%;
+      height: 200%;
       z-index: -1;
-      background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+      background-image:
+        linear-gradient(rgba(0, 0, 0, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 0, 0, 0.03) 1px, transparent 1px);
       background-size: 40px 40px;
-      transform: perspective(1000px);
-      transition: transform 0.1s;
-    }
-
-    .vignette {
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      z-index: -1;
-      background: radial-gradient(circle at center, transparent 40%, rgba(255, 255, 255, 0.8) 100%);
+      transform-style: preserve-3d;
+      /* Initial transform set by JS */
+      transition: transform 0.1s ease-out;
     }
 
     /* --- 2. CURSOR --- */
     .cursor-dot {
       width: 6px;
       height: 6px;
-      background: var(--text-main);
+      background: #000;
       position: fixed;
       border-radius: 50%;
       pointer-events: none;
@@ -89,247 +92,242 @@
     }
 
     .cursor-circle {
-      width: 40px;
-      height: 40px;
+      width: 30px;
+      height: 30px;
       border: 1px solid rgba(0, 0, 0, 0.2);
       position: fixed;
       border-radius: 50%;
       pointer-events: none;
       z-index: 10000;
-      transition: transform 0.15s var(--ease-out), width 0.3s, height 0.3s, background 0.3s;
+      transition: width 0.3s, height 0.3s, background 0.3s, border-color 0.3s;
+      /* Smooth follow is handled in JS */
     }
 
     body.hovering .cursor-circle {
       width: 60px;
       height: 60px;
-      background: rgba(255, 255, 255, 0.1);
-      backdrop-filter: blur(2px);
-      border-color: var(--accent-blue);
-    }
-
-    body.magnetic .cursor-circle {
-      transition: all 0.1s;
-      background: rgba(0, 0, 0, 0.05);
+      background: rgba(0, 0, 0, 0.03);
       border-color: transparent;
-      transform: scale(1.5);
+      backdrop-filter: blur(2px);
     }
 
-    /* --- 3. NAV --- */
-    nav {
-      position: fixed;
-      top: 24px;
-      left: 50%;
-      transform: translateX(-50%);
-      padding: 10px 24px;
-      background: rgba(255, 255, 255, 0.7);
-      backdrop-filter: blur(12px);
-      border: 1px solid rgba(0, 0, 0, 0.08);
-      border-radius: 100px;
-      display: flex;
-      gap: 32px;
-      align-items: center;
-      z-index: 100;
-      box-shadow: 0 4px 20px -4px rgba(0, 0, 0, 0.05);
-    }
-
-    .logo {
-      font-family: var(--font-mono);
-      font-weight: 700;
-      letter-spacing: -0.03em;
-    }
-
-    /* --- 4. HERO --- */
+    /* --- 3. HERO --- */
     .hero {
       min-height: 100vh;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: flex-start;
-      padding-top: 160px;
+      padding-top: 150px;
+      padding-bottom: 100px;
       position: relative;
     }
 
     h1 {
-      font-size: clamp(3rem, 7vw, 5.5rem);
-      line-height: 1.0;
+      font-size: clamp(3rem, 6vw, 5.5rem);
+      line-height: 1.1;
       text-align: center;
-      letter-spacing: -0.04em;
-      margin-bottom: 24px;
-      position: relative;
+      letter-spacing: -0.03em;
+      margin-bottom: 32px;
       z-index: 2;
+      color: var(--text);
+    }
+
+    .dynamic-line {
+      display: block;
+      height: 1.2em;
+      overflow: visible;
+      margin-top: 10px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .highlight-box {
+      background: var(--highlight);
+      padding: 0 16px;
+      display: inline-block;
+      transform: skew(-2deg);
+      border-radius: 4px;
+      position: relative;
     }
 
     .typewriter::after {
       content: '|';
       animation: blink 1s infinite;
-      color: var(--accent-blue);
+      font-weight: 300;
+      position: absolute;
+      right: 4px;
     }
 
     .subtitle {
-      font-size: 1.25rem;
+      font-size: 1.2rem;
       color: var(--text-muted);
-      max-width: 580px;
       text-align: center;
+      /* UPDATED: Increased width from 500px to 640px */
+      max-width: 640px;
       line-height: 1.6;
       margin-bottom: 60px;
     }
 
-    /* --- FOCUS: WAITLIST INPUT --- */
-    .waitlist-container {
+    /* --- INPUT --- */
+    .input-wrapper {
       position: relative;
-      width: 100%;
-      max-width: 500px;
-      margin-bottom: 80px;
-      /* Give it breathing room */
-      z-index: 50;
+      margin-bottom: 100px;
+      z-index: 200;
     }
 
     .waitlist-form {
-      position: relative;
-      background: white;
+      background: #fff;
       padding: 8px;
-      border-radius: 20px;
-      box-shadow:
-        0 20px 40px -10px rgba(0, 0, 0, 0.1),
-        0 0 0 1px rgba(0, 0, 0, 0.05);
+      border-radius: 100px;
+      border: 1px solid #e5e5e5;
       display: flex;
       gap: 8px;
-      transition: transform 0.3s, box-shadow 0.3s;
+      box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.08);
+      position: relative;
+      transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.27), box-shadow 0.3s;
     }
 
-    /* The pulsing focus ring */
+    /* Glow Ring Effect */
     .waitlist-form::before {
       content: '';
       position: absolute;
       inset: -4px;
-      border-radius: 24px;
-      background: linear-gradient(45deg, var(--accent-blue), #93C5FD);
+      border-radius: 100px;
+      background: linear-gradient(45deg, var(--accent), #93C5FD, var(--highlight));
       z-index: -1;
       opacity: 0;
-      transition: opacity 0.3s;
+      transition: opacity 0.4s;
+      filter: blur(8px);
+    }
+
+    .waitlist-form:hover {
+      transform: scale(1.02);
+      box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.12);
     }
 
     .waitlist-form:focus-within {
-      transform: scale(1.02);
-      box-shadow: 0 30px 60px -12px rgba(37, 99, 235, 0.25);
+      transform: scale(1.05);
+      border-color: transparent;
     }
 
     .waitlist-form:focus-within::before {
       opacity: 0.6;
     }
 
-    .waitlist-form input {
+    input {
       border: none;
       outline: none;
-      flex: 1;
-      padding: 16px 20px;
-      font-family: var(--font-mono);
-      font-size: 1.1rem;
-      color: var(--text-main);
       background: transparent;
-    }
-
-    .btn-primary {
-      background: var(--text-main);
-      color: white;
-      padding: 0 32px;
-      border-radius: 14px;
-      border: none;
-      font-family: var(--font-ui);
-      font-weight: 600;
+      padding: 14px 24px;
+      font-family: var(--font-mono);
       font-size: 1rem;
-      transition: background 0.2s;
-      white-space: nowrap;
+      color: var(--text);
+      min-width: 300px;
     }
 
-    .btn-primary:hover {
+    button {
+      background: #171717;
+      color: #fff;
+      border: none;
+      padding: 12px 32px;
+      border-radius: 100px;
+      font-weight: 600;
+      font-family: var(--font-ui);
+      cursor: none;
+      transition: transform 0.2s, background 0.2s;
+    }
+
+    button:hover {
       background: #000;
+      transform: scale(1.05);
     }
 
-    /* Hand-drawn Arrow Pointer */
-    .arrow-pointer {
+    /* ARROW UPDATE */
+    .arrow-container {
       position: absolute;
-      left: -140px;
-      top: 10px;
+      left: -240px;
+      /* Shifted left to fit text */
+      top: -10px;
       font-family: var(--font-hand);
-      font-size: 1.6rem;
-      color: var(--accent-blue);
-      transform: rotate(-10deg);
+      color: #444;
+      transform: rotate(-6deg);
+      opacity: 0.9;
+      width: 220px;
       display: flex;
       flex-direction: column;
       align-items: flex-end;
+      text-align: right;
+      pointer-events: none;
     }
 
-    .arrow-pointer svg {
-      width: 80px;
-      height: 40px;
-      stroke: var(--accent-blue);
-      fill: none;
-      stroke-width: 2;
-      stroke-linecap: round;
-    }
-
-    .pulse-text {
-      animation: pulseText 2s infinite ease-in-out;
-    }
-
-    /* --- 5. DRAGGABLES --- */
-    .draggable {
-      position: absolute;
-      background: #FEF3C7;
-      padding: 20px;
-      width: 200px;
-      box-shadow: 2px 8px 20px rgba(0, 0, 0, 0.1);
-      font-family: var(--font-hand);
-      font-size: 1.5rem;
+    .arrow-text {
+      font-size: 1.1rem;
       line-height: 1.1;
-      transform: rotate(-2deg);
-      z-index: 10;
-      transition: transform 0.1s, box-shadow 0.2s;
+      margin-bottom: 5px;
+      margin-right: 10px;
     }
 
-    .draggable::before {
-      content: '';
-      position: absolute;
-      top: -12px;
-      left: 50%;
-      transform: translateX(-50%) rotate(2deg);
-      width: 80px;
-      height: 24px;
-      background: rgba(255, 255, 255, 0.5);
-      backdrop-filter: blur(4px);
+    .arrow-container svg {
+      width: 60px;
+      height: 30px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 1.5;
+      margin-right: -20px;
+      /* Point closer to input */
     }
 
-    .draggable:active {
-      cursor: grabbing;
-      box-shadow: 4px 16px 30px rgba(0, 0, 0, 0.15);
-      z-index: 50;
-      transform: scale(1.05) rotate(0deg) !important;
-    }
-
-    /* --- 6. MOCKUP --- */
-    .mockup-stage {
-      perspective: 2000px;
+    /* --- INTERACTIVE MOCKUP --- */
+    .mockup-scene {
+      perspective: 1200px;
+      /* Depth for 3D tilt */
       width: 90%;
       max-width: 1000px;
-      margin-bottom: 100px;
+      position: relative;
+      z-index: 10;
+      padding: 20px;
+      /* Space for rotation */
     }
 
-    .glass-browser {
-      background: rgba(255, 255, 255, 0.4);
+    .glass-panel {
+      background: rgba(255, 255, 255, 0.6);
       backdrop-filter: blur(20px);
       border: 1px solid rgba(255, 255, 255, 0.8);
       border-radius: 16px;
-      box-shadow: 0 40px 100px -20px rgba(0, 0, 0, 0.1), inset 0 0 0 1px rgba(255, 255, 255, 0.5);
-      transform: rotateX(10deg);
-      transition: transform 0.1s;
+      box-shadow:
+        0 20px 60px -15px rgba(0, 0, 0, 0.15),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.5);
+
+      /* 3D Transform Logic */
+      transform-style: preserve-3d;
+      will-change: transform;
+      /* Initial State */
+      transform: rotateX(10deg) rotateY(0deg);
+
       overflow: hidden;
+      padding-top: 36px;
+      position: relative;
     }
 
-    .browser-header {
-      padding: 16px 24px;
-      background: rgba(255, 255, 255, 0.5);
-      border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    /* Dynamic Lighting Overlay */
+    .glass-panel::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+          rgba(255, 255, 255, 0.4) 0%,
+          transparent 60%);
+      pointer-events: none;
+      z-index: 10;
+      mix-blend-mode: overlay;
+    }
+
+    .lights {
+      position: absolute;
+      top: 14px;
+      left: 16px;
       display: flex;
       gap: 8px;
     }
@@ -338,280 +336,88 @@
       width: 10px;
       height: 10px;
       border-radius: 50%;
-      background: #E5E5E5;
+      background: #e5e5e5;
     }
 
     .dot.r {
-      background: #FCA5A5;
+      background: #FF5F57;
     }
 
     .dot.y {
-      background: #FDE047;
+      background: #FEBC2E;
     }
 
     .dot.g {
-      background: #86EFAC;
+      background: #28C840;
     }
 
-    .browser-body {
-      padding: 40px;
-      height: 400px;
-      display: grid;
-      grid-template-columns: 240px 1fr;
-      gap: 40px;
-    }
-
-    .sk-line {
-      height: 12px;
-      background: rgba(0, 0, 0, 0.05);
-      border-radius: 4px;
-      margin-bottom: 12px;
-    }
-
-    .live-graph {
+    .mockup-img {
       width: 100%;
-      height: 200px;
-      margin-top: 20px;
-      position: relative;
-    }
-
-    .graph-path {
-      fill: none;
-      stroke: var(--accent-blue);
-      stroke-width: 3;
-      stroke-dasharray: 1000;
-      stroke-dashoffset: 1000;
-      animation: drawGraph 3s ease-out forwards 1s;
-    }
-
-    /* --- 7. COOLER FEATURES (SPOTLIGHT BENTO) --- */
-    .features {
-      padding: 50px 20px 150px;
-      max-width: 1200px;
-      margin: 0 auto;
-    }
-
-    .bento {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 20px;
-    }
-
-    .card {
-      position: relative;
+      display: block;
       background: #fff;
-      border-radius: 20px;
-      padding: 32px;
-      overflow: hidden;
-      border: 1px solid rgba(0, 0, 0, 0.08);
-      transition: transform 0.2s;
+      border-top: 1px solid #f0f0f0;
     }
 
-    /* Spotlight Effect Overlay */
-    .card::after {
-      content: "";
+    /* --- STICKY NOTES --- */
+    .sticker {
       position: absolute;
-      inset: 0;
-      pointer-events: none;
-      background: radial-gradient(600px circle at var(--mouse-x) var(--mouse-y), rgba(37, 99, 235, 0.06), transparent 40%);
-      opacity: 0;
-      transition: opacity 0.3s;
-    }
-
-    .card:hover::after {
-      opacity: 1;
-    }
-
-    .card:hover {
-      transform: translateY(-4px);
-    }
-
-    .card.wide {
-      grid-column: span 2;
-    }
-
-    .card-content {
-      position: relative;
-      z-index: 2;
-    }
-
-    .card h3 {
-      font-size: 1.3rem;
-      font-weight: 600;
-      margin-bottom: 8px;
-    }
-
-    .card p {
-      color: var(--text-muted);
-      font-size: 0.95rem;
-      line-height: 1.5;
-    }
-
-    .card-visual {
-      height: 120px;
-      background: #FAFAFA;
-      border-radius: 12px;
-      margin-bottom: 24px;
-      border: 1px dashed #E5E5E5;
-      position: relative;
-      overflow: hidden;
+      padding: 18px 24px;
+      background: #fff;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+      border: 1px solid rgba(0, 0, 0, 0.05);
+      font-family: var(--font-hand);
+      font-size: 1.4rem;
+      line-height: 1.1;
+      transform-origin: center;
+      z-index: 5;
+      transition: transform 0.1s cubic-bezier(0.1, 0.9, 0.2, 1);
       display: flex;
-      align-items: center;
-      justify-content: center;
+      flex-direction: column;
+      gap: 8px;
     }
 
-    /* --- FEATURE ANIMATIONS --- */
-    /* Sync Animation */
-    .sync-ball {
-      width: 12px;
-      height: 12px;
-      background: var(--accent-blue);
-      border-radius: 50%;
-      position: absolute;
-      left: 20px;
+    .sticker:hover {
+      transform: scale(1.1) !important;
+      z-index: 50;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
     }
 
-    .card:hover .sync-ball {
-      animation: pingPong 1.5s infinite ease-in-out;
+    .sticker i {
+      font-size: 1.2rem;
     }
 
-    @keyframes pingPong {
-
-      0%,
-      100% {
-        left: 20px;
-      }
-
-      50% {
-        left: calc(100% - 32px);
-      }
+    .s1 {
+      top: 18%;
+      left: 8%;
+      background: #FEF3C7;
+      transform: rotate(-4deg);
     }
 
-    /* Command K Animation */
-    .cmd-k-ui {
-      width: 80%;
-      height: 40px;
-      background: white;
-      border: 1px solid #ddd;
-      border-radius: 8px;
-      display: flex;
-      align-items: center;
-      padding: 0 12px;
-      color: #ccc;
-      font-family: var(--font-mono);
-      font-size: 0.8rem;
-      transform: scale(0.9);
-      transition: transform 0.2s;
+    .s2 {
+      top: 22%;
+      right: 8%;
+      background: #DCFCE7;
+      transform: rotate(3deg);
     }
 
-    .card:hover .cmd-k-ui {
-      transform: scale(1);
-      border-color: var(--accent-blue);
-      color: var(--text-main);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    .s3 {
+      top: 55%;
+      left: 5%;
+      background: #FEE2E2;
+      transform: rotate(5deg);
     }
 
-    /* API Code Animation */
-    .code-scroll {
-      font-family: var(--font-mono);
-      font-size: 0.7rem;
-      color: #666;
-      width: 100%;
-      padding: 10px;
-      position: absolute;
-      top: 0;
-      animation: scrollDown 10s linear infinite;
-      opacity: 0.5;
+    .s4 {
+      top: 60%;
+      right: 12%;
+      background: #DBEAFE;
+      transform: rotate(-2deg);
     }
 
-    .card:hover .code-scroll {
-      opacity: 1;
-      color: var(--accent-blue);
-    }
-
-    @keyframes scrollDown {
-      from {
-        transform: translateY(-50%);
-      }
-
-      to {
-        transform: translateY(0%);
-      }
-    }
-
-    /* AI Brain Animation */
-    .ai-wave {
-      display: flex;
-      gap: 4px;
-      align-items: center;
-      height: 20px;
-    }
-
-    .bar {
-      width: 6px;
-      background: var(--accent-blue);
-      border-radius: 4px;
-      animation: wave 1s infinite ease-in-out;
-      height: 10px;
-    }
-
-    .card:hover .bar {
-      animation-play-state: running;
-    }
-
-    .bar:nth-child(1) {
-      animation-delay: 0.1s;
-    }
-
-    .bar:nth-child(2) {
-      animation-delay: 0.2s;
-    }
-
-    .bar:nth-child(3) {
-      animation-delay: 0.3s;
-    }
-
-    .bar:nth-child(4) {
-      animation-delay: 0.4s;
-    }
-
-    @keyframes wave {
-
-      0%,
-      100% {
-        height: 10px;
-        opacity: 0.5;
-      }
-
-      50% {
-        height: 30px;
-        opacity: 1;
-      }
-    }
-
-
-    /* --- ANIMATIONS --- */
+    /* ANIMATIONS */
     @keyframes blink {
       50% {
         opacity: 0;
-      }
-    }
-
-    @keyframes drawGraph {
-      to {
-        stroke-dashoffset: 0;
-      }
-    }
-
-    @keyframes pulseText {
-
-      0%,
-      100% {
-        transform: scale(1);
-      }
-
-      50% {
-        transform: scale(1.1);
       }
     }
 
@@ -623,357 +429,300 @@
       }
 
       25% {
-        transform: translateX(-5px);
+        transform: translateX(-4px);
       }
 
       75% {
-        transform: translateX(5px);
+        transform: translateX(4px);
       }
     }
 
-    /* --- RESPONSIVE --- */
+    /* Responsive */
     @media (max-width: 900px) {
-      .bento {
-        grid-template-columns: 1fr;
-      }
 
-      .card.wide {
-        grid-column: span 1;
-      }
-
-      .draggable {
+      .sticker,
+      .arrow-container {
         display: none;
       }
 
       h1 {
         font-size: 3.5rem;
       }
-
-      .mockup-stage {
-        display: none;
-      }
-
-      .arrow-pointer {
-        display: none;
-      }
-
-      /* Hide arrow on mobile to save space */
     }
   </style>
 </head>
 
 <body>
-  <div class="noise"></div>
-  <div class="vignette"></div>
-  <div class="grid-layer" id="grid"></div>
 
+  <div class="noise"></div>
+  <div class="grid-bg" id="grid"></div>
   <div class="cursor-dot"></div>
   <div class="cursor-circle"></div>
 
-  <div class="draggable interactable" style="top: 20%; left: 10%; transform: rotate(-4deg);">
-    <span style="color: #EF4444; font-weight: bold;">Priority:</span><br>
-    Ship the new<br>dashboard.
+  <div class="sticker s1 interactable" data-speed="0.05">
+    <span><i class="ph-bold ph-trend-up"></i> Growth</span>
+    <span style="font-size:1rem; color:#555">MRR is up 12%<br>this month.</span>
   </div>
 
-  <div class="draggable interactable" style="top: 25%; right: 10%; background: #F5F5F4; transform: rotate(3deg);">
-    <i class="ph ph-lightning" style="font-size:1.2rem; margin-right:5px;"></i>
-    No more <br> spreadsheets.
+  <div class="sticker s2 interactable" data-speed="0.08">
+    <span><i class="ph-bold ph-check-circle"></i> Tasks</span>
+    <span style="font-size:1rem; color:#555">Email VCs about<br>seed round.</span>
   </div>
 
-  <div class="draggable interactable"
-    style="top: 60%; left: 8%; width:160px; height:160px; padding:10px; background:#fff; transform: rotate(6deg);">
-    <div style="background:#eee; height:85%; width:100%; margin-bottom:8px; display:grid; place-items:center;">
-      <i class="ph-bold ph-chart-line-up" style="font-size:3rem; color:#ccc;"></i>
-    </div>
-    <span
-      style="font-size:1rem; font-family:var(--font-mono); color:#999; display:block; text-align:center;">Q3_growth.png</span>
+  <div class="sticker s3 interactable" data-speed="0.03">
+    <span><i class="ph-bold ph-warning"></i> Alert</span>
+    <span style="font-size:1rem; color:#555">Burn rate high.<br>Check AWS bill.</span>
   </div>
 
-  <nav class="mag-target">
-    <div class="logo">Scalora_</div>
-    <a href="#features" class="mag-target"
-      style="text-decoration:none; color:var(--text-main); font-size:0.9rem;">Features</a>
-  </nav>
+  <div class="sticker s4 interactable" data-speed="0.06">
+    <span><i class="ph-bold ph-users"></i> Team</span>
+    <span style="font-size:1rem; color:#555">Sync meeting<br>@ 10:00 AM</span>
+  </div>
 
   <section class="hero">
     <h1>
-      The OS for your<br>
-      <span id="typewriter" class="typewriter"></span>
+      The AI for your<br>
+      <span class="dynamic-line">
+        <span class="highlight-box">
+          <span id="typewriter" class="typewriter"></span>
+        </span>
+      </span>
     </h1>
 
     <p class="subtitle">
-      Stop switching between Linear, Notion, and Excel.<br>
-      Scalora connects your roadmap to your burn rate.
+      Scalora is your startup’s operating system—powered by Scale, an AI that continuously tracks burn rate and key
+      metrics.
+      <span style="color: var(--text); font-weight: 500;">Ask anything about growing your startup. Anytime.</span>
+    </p>
     </p>
 
-    <div class="waitlist-container">
-      <div class="arrow-pointer">
-        <span class="pulse-text">Join Alpha</span>
+    <div class="input-wrapper interactable">
+      <div class="arrow-container">
+        <span class="arrow-text">
+          Join the waitlist for early access, priority in internships, and beta testing
+        </span>
         <svg viewBox="0 0 100 50">
-          <path d="M10,10 Q50,0 90,40" stroke="currentColor" fill="none" />
-          <path d="M90,40 L80,30 M90,40 L85,20" stroke="currentColor" fill="none" />
+          <path d="M10,10 Q50,5 80,30" />
+          <path d="M80,30 L70,20 M80,30 L70,40" />
         </svg>
       </div>
-      <form class="waitlist-form" onsubmit="event.preventDefault(); simulateSuccess()">
-        <input type="email" placeholder="founder@startup.com" required class="mag-target">
-        <button type="submit" class="btn-primary mag-target">
-          Request Access
-        </button>
+
+      <form class="waitlist-form" id="waitlistForm" onsubmit="handleSubmit(event)">
+        <input type="email" name="email" id="emailInput" placeholder="founder@company.com" required class="mag-target">
+        <button type="submit" id="join-btn" class="mag-target">Join Alpha</button>
       </form>
     </div>
 
-    <div class="mockup-stage" id="mockup">
-      <div class="glass-browser">
-        <div class="browser-header">
-          <div class="dot r mag-target"></div>
-          <div class="dot y mag-target"></div>
-          <div class="dot g mag-target"></div>
+    <div class="mockup-scene">
+      <div class="glass-panel interactable" id="glassPanel">
+        <div class="lights">
+          <div class="dot r"></div>
+          <div class="dot y"></div>
+          <div class="dot g"></div>
         </div>
-        <div class="browser-body">
-          <div style="opacity: 0.6;">
-            <div class="sk-line" style="width: 60%"></div>
-            <div class="sk-line" style="width: 80%"></div>
-            <div class="sk-line" style="width: 40%; margin-top:24px;"></div>
-            <div class="sk-line" style="width: 70%"></div>
-          </div>
-          <div>
-            <div style="display:flex; justify-content:space-between; align-items:flex-end;">
-              <h2 style="font-size:2rem; font-weight:600;">$24,500 <span
-                  style="font-size:1rem; color:#999; font-weight:400;">MRR</span></h2>
-              <div
-                style="background:#DCFCE7; color:#166534; padding:4px 8px; border-radius:6px; font-size:0.8rem; font-weight:600;">
-                +12%</div>
-            </div>
-            <div class="live-graph">
-              <svg width="100%" height="100%" viewBox="0 0 400 200" preserveAspectRatio="none">
-                <defs>
-                  <linearGradient id="grad" x1="0%" y1="0%" x2="0%" y2="100%">
-                    <stop offset="0%" style="stop-color:rgb(37,99,235);stop-opacity:0.2" />
-                    <stop offset="100%" style="stop-color:rgb(37,99,235);stop-opacity:0" />
-                  </linearGradient>
-                </defs>
-                <path d="M0,180 C50,170 100,100 150,120 S250,50 400,20" fill="url(#grad)" stroke="none" opacity="0.5" />
-                <path class="graph-path" d="M0,180 C50,170 100,100 150,120 S250,50 400,20" />
-              </svg>
-            </div>
-          </div>
+
+        <img src="scalora.png" alt="Dashboard" class="mockup-img"
+          onerror="this.style.display='none'; this.nextElementSibling.style.display='grid'">
+
+        <div style="height:500px; display:none; place-items:center; background:#f9fafb; color:#ccc;" class="fallback">
+          <div style="text-align:center">scalora.png<br><span style="font-size:0.8rem">Image missing</span></div>
         </div>
       </div>
-    </div>
-  </section>
-
-  <section class="features" id="features">
-    <div class="bento" id="bento-grid">
-
-      <div class="card wide interactable">
-        <div class="card-visual">
-          <div style="width:80%; height:2px; background:#ddd; position:relative;">
-            <div class="sync-ball"></div>
-          </div>
-        </div>
-        <div class="card-content">
-          <h3>Physics-based Sync</h3>
-          <p>Changes ripple through your documents automatically. Connect a Linear issue to a financial projection and
-            watch the math update in real-time.</p>
-        </div>
-      </div>
-
-      <div class="card interactable">
-        <div class="card-visual">
-          <div class="cmd-k-ui">
-            <span style="color:var(--accent-blue); margin-right:8px;">></span> Search...
-            <div style="margin-left:auto; font-size:0.7rem; border:1px solid #eee; padding:2px 4px; border-radius:4px;">
-              ⌘K</div>
-          </div>
-        </div>
-        <div class="card-content">
-          <h3>Command K</h3>
-          <p>Navigate your entire company OS without touching the mouse.</p>
-        </div>
-      </div>
-
-      <div class="card interactable">
-        <div class="card-visual">
-          <div class="ai-wave">
-            <div class="bar"></div>
-            <div class="bar"></div>
-            <div class="bar"></div>
-            <div class="bar"></div>
-          </div>
-        </div>
-        <div class="card-content">
-          <h3>AI Analyst</h3>
-          <p>Don't just store data, query it. "What's our burn rate if we hire two engineers?"</p>
-        </div>
-      </div>
-
-      <div class="card wide interactable">
-        <div class="card-visual" style="align-items: flex-start;">
-          <div class="code-scroll">
-            query { company { runway, burn } }<br>
-            // response: { "runway": "14m" }<br>
-            mutation { hire(role: "eng") }<br>
-            // calculating new projection...<br>
-            query { company { runway, burn } }<br>
-            // response: { "runway": "14m" }<br>
-            mutation { hire(role: "eng") }<br>
-            // calculating new projection...
-          </div>
-        </div>
-        <div class="card-content">
-          <h3>API First</h3>
-          <p>Everything is accessible via GraphQL. Build your own custom dashboards on top of Scalora.</p>
-        </div>
-      </div>
-
     </div>
   </section>
 
   <script>
-    // --- 1. TYPEWRITER ---
-    const words = ["founding journey.", "next big idea.", "seed round."];
-    let i = 0;
+    // --- TYPEWRITER ---
+    const phrases = ["Startup.", "Founding Journey.", "Next Big Idea.", "Roadmap.", "Strategy."];
+    let phraseIndex = 0;
+    const target = document.getElementById("typewriter");
 
-    function typeWriter() {
-      const target = document.getElementById("typewriter");
-      const word = words[i % words.length];
+    function type() {
+      const text = phrases[phraseIndex % phrases.length];
       let charIndex = 0;
       target.innerHTML = "";
-
-      const type = setInterval(() => {
-        target.innerHTML += word.charAt(charIndex);
+      const interval = setInterval(() => {
+        target.innerHTML += text.charAt(charIndex);
         charIndex++;
-        if (charIndex >= word.length) {
-          clearInterval(type);
-          setTimeout(erase, 2000);
-        }
+        if (charIndex >= text.length) { clearInterval(interval); setTimeout(erase, 2000); }
       }, 100);
     }
     function erase() {
-      const target = document.getElementById("typewriter");
       let content = target.innerHTML;
-      const erase = setInterval(() => {
+      const interval = setInterval(() => {
         content = content.substring(0, content.length - 1);
         target.innerHTML = content;
-        if (content.length === 0) {
-          clearInterval(erase);
-          i++;
-          typeWriter();
-        }
+        if (content.length === 0) { clearInterval(interval); phraseIndex++; type(); }
       }, 50);
     }
-    setTimeout(typeWriter, 1000);
+    setTimeout(type, 800);
 
-    // --- 2. CURSOR & PARALLAX ---
-    const cursorDot = document.querySelector('.cursor-dot');
-    const cursorCircle = document.querySelector('.cursor-circle');
-    let mouseX = 0, mouseY = 0;
-    let circleX = 0, circleY = 0;
+    // --- FOCUS MODE ---
+    const emailInput = document.getElementById('emailInput');
+    emailInput.addEventListener('focus', () => document.body.classList.add('focus-mode'));
+    emailInput.addEventListener('blur', () => document.body.classList.remove('focus-mode'));
+
+    // --- INTERACTIVE MOUSE ENGINE ---
+    const dot = document.querySelector('.cursor-dot');
+    const circle = document.querySelector('.cursor-circle');
+    const stickers = document.querySelectorAll('.sticker');
+    const grid = document.getElementById('grid');
+    const glassPanel = document.getElementById('glassPanel');
+
+    // Mouse state
+    let mx = 0, my = 0; // Mouse real position
+    let cx = 0, cy = 0; // Cursor circle position (lagged)
 
     window.addEventListener('mousemove', (e) => {
-      mouseX = e.clientX;
-      mouseY = e.clientY;
-      cursorDot.style.transform = `translate(${mouseX - 3}px, ${mouseY - 3}px)`;
+      mx = e.clientX;
+      my = e.clientY;
 
-      // Grid Parallax
-      const grid = document.getElementById('grid');
-      const xOffset = (window.innerWidth / 2 - mouseX) / 40;
-      const yOffset = (window.innerHeight / 2 - mouseY) / 40;
-      grid.style.transform = `perspective(1000px) rotateX(${yOffset * 0.05}deg) rotateY(${xOffset * 0.05}deg) translate(${xOffset}px, ${yOffset}px)`;
+      // 1. Move Cursor Dot Instantly
+      dot.style.transform = `translate(${mx - 3}px, ${my - 3}px)`;
+
+      // 2. Parallax Stickers
+      stickers.forEach(s => {
+        if (s.classList.contains('dragging')) return; // Don't parallax if dragging
+        const speed = parseFloat(s.dataset.speed);
+        const x = (window.innerWidth - mx * speed) / 90;
+        const y = (window.innerHeight - my * speed) / 90;
+
+        // Preserve original rotation
+        let rotate = 'rotate(0deg)';
+        if (s.classList.contains('s1')) rotate = 'rotate(-4deg)';
+        if (s.classList.contains('s2')) rotate = 'rotate(3deg)';
+        if (s.classList.contains('s3')) rotate = 'rotate(5deg)';
+        if (s.classList.contains('s4')) rotate = 'rotate(-2deg)';
+
+        s.style.transform = `translate(${x}px, ${y}px) ${rotate}`;
+      });
+
+      // 3. Interactive Grid Background (Tilt & Pan)
+      const centerX = window.innerWidth / 2;
+      const centerY = window.innerHeight / 2;
+      const percentX = (mx - centerX) / centerX; // -1 to 1
+      const percentY = (my - centerY) / centerY; // -1 to 1
+
+      // Grid moves slightly opposite to mouse and tilts
+      grid.style.transform = `perspective(500px) rotateX(${20 + (percentY * 2)}deg) rotateY(${percentX * 2}deg) translateX(${percentX * 10}px) translateY(${percentY * 10}px)`;
+
+      // 4. Interactive Glass Panel (3D Tilt)
+      // We want the card to look "at" the mouse, or tilt away from it. 
+      // Let's make it tilt *towards* the mouse (Apple TV style).
+      // RotateX: Mouse Up -> Tilt Up (Negative Deg). Mouse Down -> Tilt Down (Positive Deg)
+      const tiltX = -percentY * 5; // Max 5 deg tilt
+      const tiltY = percentX * 5;  // Max 5 deg tilt
+
+      glassPanel.style.transform = `rotateX(${10 + tiltX}deg) rotateY(${tiltY}deg)`;
+
+      // 5. Dynamic Lighting (Gloss Effect)
+      // Update CSS variables for the pseudo-element gradient
+      glassPanel.style.setProperty('--mouse-x', `${(percentX + 1) * 50}%`);
+      glassPanel.style.setProperty('--mouse-y', `${(percentY + 1) * 50}%`);
+
+      // 6. Check Hover Targets for Cursor
+      const target = e.target.closest('.interactable, .mag-target, a, button, input');
+      if (target) {
+        document.body.classList.add('hovering');
+      } else {
+        document.body.classList.remove('hovering');
+      }
     });
 
-    function animateCursor() {
-      let distX = mouseX - circleX;
-      let distY = mouseY - circleY;
-      circleX += distX * 0.15;
-      circleY += distY * 0.15;
-      cursorCircle.style.transform = `translate(${circleX - 20}px, ${circleY - 20}px)`;
-      requestAnimationFrame(animateCursor);
+    // Smooth Cursor Circle Animation Loop
+    function animate() {
+      cx += (mx - cx) * 0.15;
+      cy += (my - cy) * 0.15;
+      circle.style.transform = `translate(${cx - 15}px, ${cy - 15}px)`;
+      requestAnimationFrame(animate);
     }
-    animateCursor();
+    animate();
 
-    // Hover Listeners
-    document.querySelectorAll('.interactable, a, button, input').forEach(el => {
-      el.addEventListener('mouseenter', () => document.body.classList.add('hovering'));
-      el.addEventListener('mouseleave', () => document.body.classList.remove('hovering'));
-    });
-    document.querySelectorAll('.mag-target').forEach(el => {
-      el.addEventListener('mouseenter', () => document.body.classList.add('magnetic'));
-      el.addEventListener('mouseleave', () => document.body.classList.remove('magnetic'));
-    });
+    // --- DRAGGABLES ---
+    let dragged = null;
+    let dragOffsetX, dragOffsetY;
 
-    // --- 3. SPOTLIGHT BENTO ---
-    const cards = document.querySelectorAll('.card');
-    const bentoGrid = document.getElementById('bento-grid');
-
-    bentoGrid.addEventListener('mousemove', (e) => {
-      cards.forEach(card => {
-        const rect = card.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
-        card.style.setProperty('--mouse-x', `${x}px`);
-        card.style.setProperty('--mouse-y', `${y}px`);
+    stickers.forEach(el => {
+      el.addEventListener('mousedown', (e) => {
+        dragged = el;
+        el.classList.add('dragging');
+        const rect = el.getBoundingClientRect();
+        dragOffsetX = e.clientX - rect.left;
+        dragOffsetY = e.clientY - rect.top;
+        el.style.zIndex = 1000;
+        el.style.transition = 'none'; // Instant movement
       });
     });
 
-    // --- 4. MOCKUP TILT ---
-    const mockup = document.querySelector('.glass-browser');
-    document.addEventListener('mousemove', (e) => {
-      if (window.innerWidth < 900) return;
-      const xAxis = (window.innerWidth / 2 - e.pageX) / 40;
-      const yAxis = (window.innerHeight / 2 - e.pageY) / 40;
-      mockup.style.transform = `rotateY(${xAxis}deg) rotateX(${10 + yAxis}deg)`;
+    window.addEventListener('mouseup', () => {
+      if (dragged) {
+        dragged.style.transition = 'transform 0.1s cubic-bezier(0.1, 0.9, 0.2, 1)'; // Restore smoothing
+        dragged.classList.remove('dragging');
+        dragged = null;
+      }
     });
 
-    // --- 5. DRAG PHYSICS ---
-    let draggedItem = null;
-    let initialX, initialY;
-    let xOffset = 0, yOffset = 0;
+    window.addEventListener('mousemove', (e) => {
+      if (!dragged) return;
+      e.preventDefault();
+      // Calculate absolute position
+      const x = e.clientX - dragOffsetX;
+      const y = e.clientY - dragOffsetY;
 
-    document.querySelectorAll('.draggable').forEach(item => {
-      item.addEventListener('mousedown', dragStart);
+      // We need to override the parallax translate, but keep it fixed relative to viewport
+      dragged.style.left = x + "px";
+      dragged.style.top = y + "px";
+      dragged.style.transform = "scale(1.1) rotate(0deg)";
     });
 
-    function dragStart(e) {
-      initialX = e.clientX - xOffset;
-      initialY = e.clientY - yOffset;
-      if (e.target.closest('.draggable')) {
-        draggedItem = e.target.closest('.draggable');
-        draggedItem.style.zIndex = 100;
-      }
-      document.addEventListener('mouseup', dragEnd);
-      document.addEventListener('mousemove', drag);
-    }
+    // --- BACKEND CONNECTION (Google Sheets via SheetMonkey) ---
+    function handleSubmit(e) {
+      e.preventDefault();
+      const btn = document.getElementById('join-btn');
+      const input = document.getElementById('emailInput');
+      const form = document.getElementById('waitlistForm');
 
-    function drag(e) {
-      if (draggedItem) {
-        e.preventDefault();
-        draggedItem.style.left = `${e.clientX}px`;
-        draggedItem.style.top = `${e.clientY}px`;
-        draggedItem.style.margin = 0;
-        draggedItem.style.transform = 'translate(-50%, -50%) rotate(0deg) scale(1.05)';
-      }
-    }
+      // 1. UI Loading State
+      const originalText = btn.innerText;
+      btn.innerText = "Saving...";
+      btn.style.opacity = "0.7";
 
-    function dragEnd() {
-      if (draggedItem) {
-        const r = (Math.random() - 0.5) * 10;
-        draggedItem.style.transform = `translate(-50%, -50%) rotate(${r}deg)`;
-        draggedItem.style.zIndex = 10;
-        draggedItem = null;
-      }
-      document.removeEventListener('mouseup', dragEnd);
-      document.removeEventListener('mousemove', drag);
-    }
+      // 2. Prepare Data
+      // *** PASTE YOUR SHEETMONKEY URL BELOW ***
+      const endpoint = "https://api.sheetmonkey.io/form/8ZCQpQh8CPFchXovmGZ8Pk";
 
-    // --- 6. SUCCESS STATE ---
-    function simulateSuccess() {
-      const btn = document.querySelector('.waitlist-form button');
-      const input = document.querySelector('.waitlist-form input');
-      btn.innerHTML = "You're in <i class='ph-bold ph-check'></i>";
-      btn.style.background = "#22C55E";
-      input.disabled = true;
-      btn.style.animation = "shake 0.5s ease-in-out";
+      const formData = new FormData(form);
+
+      // 3. Send Data
+      fetch(endpoint, {
+        method: "POST",
+        body: formData
+      })
+        .then(response => {
+          if (response.ok) {
+            // 4. Success Animation
+            btn.innerHTML = "You're on the list! <i class='ph-bold ph-check'></i>";
+            btn.style.background = "#16a34a";
+            btn.style.opacity = "1";
+            btn.style.animation = "shake 0.4s ease-in-out";
+
+            input.value = "";
+            input.placeholder = "We'll be in touch soon.";
+            input.disabled = true;
+            document.body.classList.remove('focus-mode');
+          } else {
+            throw new Error('Submission failed');
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          btn.innerText = "Error. Try again.";
+          btn.style.background = "#dc2626";
+          setTimeout(() => {
+            btn.innerText = originalText;
+            btn.style.background = "#171717";
+          }, 3000);
+        });
     }
   </script>
 </body>
