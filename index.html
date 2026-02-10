@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Scalora | The AI for Founders</title>
   <link rel="icon" type="image/x-icon" href="download.png">
 
@@ -30,7 +30,15 @@
       margin: 0;
       padding: 0;
       box-sizing: border-box;
+      /* Only custom cursor on desktop */
       cursor: none;
+    }
+
+    /* RESTORE DEFAULT CURSOR ON TOUCH DEVICES */
+    @media (hover: none) and (pointer: coarse) {
+      * {
+        cursor: auto !important;
+      }
     }
 
     body {
@@ -77,7 +85,6 @@
         linear-gradient(90deg, rgba(0, 0, 0, 0.03) 1px, transparent 1px);
       background-size: 40px 40px;
       transform-style: preserve-3d;
-      /* Initial transform set by JS */
       transition: transform 0.1s ease-out;
     }
 
@@ -101,7 +108,6 @@
       pointer-events: none;
       z-index: 10000;
       transition: width 0.3s, height 0.3s, background 0.3s, border-color 0.3s;
-      /* Smooth follow is handled in JS */
     }
 
     body.hovering .cursor-circle {
@@ -122,16 +128,22 @@
       padding-top: 150px;
       padding-bottom: 100px;
       position: relative;
+      /* Prevent horizontal scroll on mobile */
+      max-width: 100vw;
+      overflow-x: hidden;
     }
 
     h1 {
-      font-size: clamp(3rem, 6vw, 5.5rem);
+      font-size: clamp(2.5rem, 6vw, 5.5rem);
+      /* Adjusted minimum for mobile */
       line-height: 1.1;
       text-align: center;
       letter-spacing: -0.03em;
       margin-bottom: 32px;
       z-index: 2;
       color: var(--text);
+      padding: 0 16px;
+      /* Padding for mobile edges */
     }
 
     .dynamic-line {
@@ -162,13 +174,13 @@
     }
 
     .subtitle {
-      font-size: 1.2rem;
+      font-size: clamp(1rem, 4vw, 1.2rem);
       color: var(--text-muted);
       text-align: center;
-      /* UPDATED: Increased width from 500px to 640px */
       max-width: 640px;
       line-height: 1.6;
       margin-bottom: 60px;
+      padding: 0 20px;
     }
 
     /* --- INPUT --- */
@@ -176,6 +188,10 @@
       position: relative;
       margin-bottom: 100px;
       z-index: 200;
+      width: 90%;
+      max-width: 500px;
+      display: flex;
+      justify-content: center;
     }
 
     .waitlist-form {
@@ -188,6 +204,7 @@
       box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.08);
       position: relative;
       transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.27), box-shadow 0.3s;
+      width: 100%;
     }
 
     /* Glow Ring Effect */
@@ -225,7 +242,9 @@
       font-family: var(--font-mono);
       font-size: 1rem;
       color: var(--text);
-      min-width: 300px;
+      /* Default desktop sizing */
+      flex-grow: 1;
+      min-width: 200px;
     }
 
     button {
@@ -237,7 +256,15 @@
       font-weight: 600;
       font-family: var(--font-ui);
       cursor: none;
+      white-space: nowrap;
       transition: transform 0.2s, background 0.2s;
+    }
+
+    /* Touch device button fix */
+    @media (hover: none) and (pointer: coarse) {
+      button {
+        cursor: pointer;
+      }
     }
 
     button:hover {
@@ -249,7 +276,6 @@
     .arrow-container {
       position: absolute;
       left: -240px;
-      /* Shifted left to fit text */
       top: -10px;
       font-family: var(--font-hand);
       color: #444;
@@ -277,19 +303,16 @@
       stroke: currentColor;
       stroke-width: 1.5;
       margin-right: -20px;
-      /* Point closer to input */
     }
 
     /* --- INTERACTIVE MOCKUP --- */
     .mockup-scene {
       perspective: 1200px;
-      /* Depth for 3D tilt */
       width: 90%;
       max-width: 1000px;
       position: relative;
       z-index: 10;
       padding: 20px;
-      /* Space for rotation */
     }
 
     .glass-panel {
@@ -300,19 +323,14 @@
       box-shadow:
         0 20px 60px -15px rgba(0, 0, 0, 0.15),
         inset 0 0 0 1px rgba(255, 255, 255, 0.5);
-
-      /* 3D Transform Logic */
       transform-style: preserve-3d;
       will-change: transform;
-      /* Initial State */
       transform: rotateX(10deg) rotateY(0deg);
-
       overflow: hidden;
       padding-top: 36px;
       position: relative;
     }
 
-    /* Dynamic Lighting Overlay */
     .glass-panel::after {
       content: "";
       position: absolute;
@@ -438,16 +456,68 @@
       }
     }
 
-    /* Responsive */
+    /* --- RESPONSIVE / BOOTSTRAPPING --- */
+
+    /* Tablet & Smaller (Max 900px) */
     @media (max-width: 900px) {
 
       .sticker,
       .arrow-container {
-        display: none;
+        display: none !important;
+        /* Hide clutter on smaller screens */
       }
 
-      h1 {
-        font-size: 3.5rem;
+      .hero {
+        padding-top: 120px;
+      }
+
+      /* Disable custom cursor on touch */
+      .cursor-dot,
+      .cursor-circle {
+        display: none;
+      }
+    }
+
+    /* Mobile Phones (Max 600px) */
+    @media (max-width: 600px) {
+      .hero {
+        padding-top: 100px;
+      }
+
+      .waitlist-form {
+        flex-direction: column;
+        /* Stack vertically */
+        border-radius: 24px;
+        /* Less pill-like */
+        padding: 12px;
+        gap: 12px;
+      }
+
+      .waitlist-form::before {
+        border-radius: 24px;
+      }
+
+      input {
+        width: 100%;
+        text-align: center;
+        border-bottom: 1px solid #f0f0f0;
+        padding: 12px;
+      }
+
+      button {
+        width: 100%;
+        padding: 16px;
+      }
+
+      /* Disable complex 3D transforms on mobile for performance/ux */
+      .mockup-scene {
+        perspective: none;
+        padding: 0;
+      }
+
+      .glass-panel {
+        transform: none !important;
+        /* Force flat view */
       }
     }
   </style>
@@ -457,6 +527,7 @@
 
   <div class="noise"></div>
   <div class="grid-bg" id="grid"></div>
+
   <div class="cursor-dot"></div>
   <div class="cursor-circle"></div>
 
@@ -491,9 +562,9 @@
     </h1>
 
     <p class="subtitle">
-      Scalora is your startup’s operating system—powered by Scale, an AI for founders that builds 14 day growth plans using your burn rate and key metrics.
-      <span style="color: var(--text); font-weight: 500;">Ask anything about growing your startup. Anytime.</span>
-    </p>
+      Scalora is your startup’s operating system—powered by Scale, an AI for founders that builds 14 day growth plans
+      using your burn rate and key metrics.
+      <br><span style="color: var(--text); font-weight: 500;">Ask anything about growing your startup. Anytime.</span>
     </p>
 
     <div class="input-wrapper interactable">
@@ -573,29 +644,37 @@
     let mx = 0, my = 0; // Mouse real position
     let cx = 0, cy = 0; // Cursor circle position (lagged)
 
+    // Detect Touch Device for optimization
+    const isTouch = window.matchMedia("(pointer: coarse)").matches;
+
     window.addEventListener('mousemove', (e) => {
+      // Disable heavy mouse effects on touch devices to save battery/perf
+      if (isTouch) return;
+
       mx = e.clientX;
       my = e.clientY;
 
       // 1. Move Cursor Dot Instantly
       dot.style.transform = `translate(${mx - 3}px, ${my - 3}px)`;
 
-      // 2. Parallax Stickers
-      stickers.forEach(s => {
-        if (s.classList.contains('dragging')) return; // Don't parallax if dragging
-        const speed = parseFloat(s.dataset.speed);
-        const x = (window.innerWidth - mx * speed) / 90;
-        const y = (window.innerHeight - my * speed) / 90;
+      // 2. Parallax Stickers (Only if visible)
+      if (window.innerWidth > 900) {
+        stickers.forEach(s => {
+          if (s.classList.contains('dragging')) return;
+          const speed = parseFloat(s.dataset.speed);
+          const x = (window.innerWidth - mx * speed) / 90;
+          const y = (window.innerHeight - my * speed) / 90;
 
-        // Preserve original rotation
-        let rotate = 'rotate(0deg)';
-        if (s.classList.contains('s1')) rotate = 'rotate(-4deg)';
-        if (s.classList.contains('s2')) rotate = 'rotate(3deg)';
-        if (s.classList.contains('s3')) rotate = 'rotate(5deg)';
-        if (s.classList.contains('s4')) rotate = 'rotate(-2deg)';
+          // Preserve original rotation
+          let rotate = 'rotate(0deg)';
+          if (s.classList.contains('s1')) rotate = 'rotate(-4deg)';
+          if (s.classList.contains('s2')) rotate = 'rotate(3deg)';
+          if (s.classList.contains('s3')) rotate = 'rotate(5deg)';
+          if (s.classList.contains('s4')) rotate = 'rotate(-2deg)';
 
-        s.style.transform = `translate(${x}px, ${y}px) ${rotate}`;
-      });
+          s.style.transform = `translate(${x}px, ${y}px) ${rotate}`;
+        });
+      }
 
       // 3. Interactive Grid Background (Tilt & Pan)
       const centerX = window.innerWidth / 2;
@@ -606,19 +685,16 @@
       // Grid moves slightly opposite to mouse and tilts
       grid.style.transform = `perspective(500px) rotateX(${20 + (percentY * 2)}deg) rotateY(${percentX * 2}deg) translateX(${percentX * 10}px) translateY(${percentY * 10}px)`;
 
-      // 4. Interactive Glass Panel (3D Tilt)
-      // We want the card to look "at" the mouse, or tilt away from it. 
-      // Let's make it tilt *towards* the mouse (Apple TV style).
-      // RotateX: Mouse Up -> Tilt Up (Negative Deg). Mouse Down -> Tilt Down (Positive Deg)
-      const tiltX = -percentY * 5; // Max 5 deg tilt
-      const tiltY = percentX * 5;  // Max 5 deg tilt
+      // 4. Interactive Glass Panel (3D Tilt) - Only on larger screens
+      if (window.innerWidth > 600) {
+        const tiltX = -percentY * 5;
+        const tiltY = percentX * 5;
+        glassPanel.style.transform = `rotateX(${10 + tiltX}deg) rotateY(${tiltY}deg)`;
 
-      glassPanel.style.transform = `rotateX(${10 + tiltX}deg) rotateY(${tiltY}deg)`;
-
-      // 5. Dynamic Lighting (Gloss Effect)
-      // Update CSS variables for the pseudo-element gradient
-      glassPanel.style.setProperty('--mouse-x', `${(percentX + 1) * 50}%`);
-      glassPanel.style.setProperty('--mouse-y', `${(percentY + 1) * 50}%`);
+        // 5. Dynamic Lighting (Gloss Effect)
+        glassPanel.style.setProperty('--mouse-x', `${(percentX + 1) * 50}%`);
+        glassPanel.style.setProperty('--mouse-y', `${(percentY + 1) * 50}%`);
+      }
 
       // 6. Check Hover Targets for Cursor
       const target = e.target.closest('.interactable, .mag-target, a, button, input');
@@ -631,6 +707,9 @@
 
     // Smooth Cursor Circle Animation Loop
     function animate() {
+      // Don't run loop on touch devices
+      if (isTouch) return;
+
       cx += (mx - cx) * 0.15;
       cy += (my - cy) * 0.15;
       circle.style.transform = `translate(${cx - 15}px, ${cy - 15}px)`;
@@ -642,38 +721,40 @@
     let dragged = null;
     let dragOffsetX, dragOffsetY;
 
-    stickers.forEach(el => {
-      el.addEventListener('mousedown', (e) => {
-        dragged = el;
-        el.classList.add('dragging');
-        const rect = el.getBoundingClientRect();
-        dragOffsetX = e.clientX - rect.left;
-        dragOffsetY = e.clientY - rect.top;
-        el.style.zIndex = 1000;
-        el.style.transition = 'none'; // Instant movement
+    // Only enable dragging on desktop
+    if (!isTouch) {
+      stickers.forEach(el => {
+        el.addEventListener('mousedown', (e) => {
+          dragged = el;
+          el.classList.add('dragging');
+          const rect = el.getBoundingClientRect();
+          dragOffsetX = e.clientX - rect.left;
+          dragOffsetY = e.clientY - rect.top;
+          el.style.zIndex = 1000;
+          el.style.transition = 'none'; // Instant movement
+        });
       });
-    });
 
-    window.addEventListener('mouseup', () => {
-      if (dragged) {
-        dragged.style.transition = 'transform 0.1s cubic-bezier(0.1, 0.9, 0.2, 1)'; // Restore smoothing
-        dragged.classList.remove('dragging');
-        dragged = null;
-      }
-    });
+      window.addEventListener('mouseup', () => {
+        if (dragged) {
+          dragged.style.transition = 'transform 0.1s cubic-bezier(0.1, 0.9, 0.2, 1)'; // Restore smoothing
+          dragged.classList.remove('dragging');
+          dragged = null;
+        }
+      });
 
-    window.addEventListener('mousemove', (e) => {
-      if (!dragged) return;
-      e.preventDefault();
-      // Calculate absolute position
-      const x = e.clientX - dragOffsetX;
-      const y = e.clientY - dragOffsetY;
+      window.addEventListener('mousemove', (e) => {
+        if (!dragged) return;
+        e.preventDefault();
+        // Calculate absolute position
+        const x = e.clientX - dragOffsetX;
+        const y = e.clientY - dragOffsetY;
 
-      // We need to override the parallax translate, but keep it fixed relative to viewport
-      dragged.style.left = x + "px";
-      dragged.style.top = y + "px";
-      dragged.style.transform = "scale(1.1) rotate(0deg)";
-    });
+        dragged.style.left = x + "px";
+        dragged.style.top = y + "px";
+        dragged.style.transform = "scale(1.1) rotate(0deg)";
+      });
+    }
 
     // --- BACKEND CONNECTION (Google Sheets via SheetMonkey) ---
     function handleSubmit(e) {
