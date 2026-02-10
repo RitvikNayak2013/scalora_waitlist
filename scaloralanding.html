@@ -1,0 +1,981 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Scalora | The Intelligent Notebook</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&family=Reenie+Beanie&display=swap"
+    rel="stylesheet">
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+  <style>
+    /* --- 0. VARS & RESET --- */
+    :root {
+      --bg: #FAFAF9;
+      /* Stone-50 */
+      --grid: #E7E5E4;
+      /* Stone-200 */
+      --text-main: #1C1917;
+      --text-muted: #57534E;
+      --accent-blue: #2563EB;
+      --accent-marker: rgba(253, 224, 71, 0.6);
+      --font-ui: 'Inter', sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+      --font-hand: 'Reenie Beanie', cursive;
+      --ease-out: cubic-bezier(0.215, 0.61, 0.355, 1);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      cursor: none;
+    }
+
+    ::selection {
+      background: var(--accent-marker);
+      color: black;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text-main);
+      font-family: var(--font-ui);
+      overflow-x: hidden;
+      width: 100vw;
+    }
+
+    /* --- 1. AMBIENCE --- */
+    .noise {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 999;
+      opacity: 0.05;
+      background: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E");
+    }
+
+    .grid-layer {
+      position: fixed;
+      inset: -50px;
+      z-index: -1;
+      background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+      background-size: 40px 40px;
+      transform: perspective(1000px);
+      transition: transform 0.1s;
+    }
+
+    .vignette {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: -1;
+      background: radial-gradient(circle at center, transparent 40%, rgba(255, 255, 255, 0.8) 100%);
+    }
+
+    /* --- 2. CURSOR --- */
+    .cursor-dot {
+      width: 6px;
+      height: 6px;
+      background: var(--text-main);
+      position: fixed;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 10000;
+    }
+
+    .cursor-circle {
+      width: 40px;
+      height: 40px;
+      border: 1px solid rgba(0, 0, 0, 0.2);
+      position: fixed;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 10000;
+      transition: transform 0.15s var(--ease-out), width 0.3s, height 0.3s, background 0.3s;
+    }
+
+    body.hovering .cursor-circle {
+      width: 60px;
+      height: 60px;
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(2px);
+      border-color: var(--accent-blue);
+    }
+
+    body.magnetic .cursor-circle {
+      transition: all 0.1s;
+      background: rgba(0, 0, 0, 0.05);
+      border-color: transparent;
+      transform: scale(1.5);
+    }
+
+    /* --- 3. NAV --- */
+    nav {
+      position: fixed;
+      top: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 10px 24px;
+      background: rgba(255, 255, 255, 0.7);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(0, 0, 0, 0.08);
+      border-radius: 100px;
+      display: flex;
+      gap: 32px;
+      align-items: center;
+      z-index: 100;
+      box-shadow: 0 4px 20px -4px rgba(0, 0, 0, 0.05);
+    }
+
+    .logo {
+      font-family: var(--font-mono);
+      font-weight: 700;
+      letter-spacing: -0.03em;
+    }
+
+    /* --- 4. HERO --- */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding-top: 160px;
+      position: relative;
+    }
+
+    h1 {
+      font-size: clamp(3rem, 7vw, 5.5rem);
+      line-height: 1.0;
+      text-align: center;
+      letter-spacing: -0.04em;
+      margin-bottom: 24px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .typewriter::after {
+      content: '|';
+      animation: blink 1s infinite;
+      color: var(--accent-blue);
+    }
+
+    .subtitle {
+      font-size: 1.25rem;
+      color: var(--text-muted);
+      max-width: 580px;
+      text-align: center;
+      line-height: 1.6;
+      margin-bottom: 60px;
+    }
+
+    /* --- FOCUS: WAITLIST INPUT --- */
+    .waitlist-container {
+      position: relative;
+      width: 100%;
+      max-width: 500px;
+      margin-bottom: 80px;
+      /* Give it breathing room */
+      z-index: 50;
+    }
+
+    .waitlist-form {
+      position: relative;
+      background: white;
+      padding: 8px;
+      border-radius: 20px;
+      box-shadow:
+        0 20px 40px -10px rgba(0, 0, 0, 0.1),
+        0 0 0 1px rgba(0, 0, 0, 0.05);
+      display: flex;
+      gap: 8px;
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+
+    /* The pulsing focus ring */
+    .waitlist-form::before {
+      content: '';
+      position: absolute;
+      inset: -4px;
+      border-radius: 24px;
+      background: linear-gradient(45deg, var(--accent-blue), #93C5FD);
+      z-index: -1;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .waitlist-form:focus-within {
+      transform: scale(1.02);
+      box-shadow: 0 30px 60px -12px rgba(37, 99, 235, 0.25);
+    }
+
+    .waitlist-form:focus-within::before {
+      opacity: 0.6;
+    }
+
+    .waitlist-form input {
+      border: none;
+      outline: none;
+      flex: 1;
+      padding: 16px 20px;
+      font-family: var(--font-mono);
+      font-size: 1.1rem;
+      color: var(--text-main);
+      background: transparent;
+    }
+
+    .btn-primary {
+      background: var(--text-main);
+      color: white;
+      padding: 0 32px;
+      border-radius: 14px;
+      border: none;
+      font-family: var(--font-ui);
+      font-weight: 600;
+      font-size: 1rem;
+      transition: background 0.2s;
+      white-space: nowrap;
+    }
+
+    .btn-primary:hover {
+      background: #000;
+    }
+
+    /* Hand-drawn Arrow Pointer */
+    .arrow-pointer {
+      position: absolute;
+      left: -140px;
+      top: 10px;
+      font-family: var(--font-hand);
+      font-size: 1.6rem;
+      color: var(--accent-blue);
+      transform: rotate(-10deg);
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+    }
+
+    .arrow-pointer svg {
+      width: 80px;
+      height: 40px;
+      stroke: var(--accent-blue);
+      fill: none;
+      stroke-width: 2;
+      stroke-linecap: round;
+    }
+
+    .pulse-text {
+      animation: pulseText 2s infinite ease-in-out;
+    }
+
+    /* --- 5. DRAGGABLES --- */
+    .draggable {
+      position: absolute;
+      background: #FEF3C7;
+      padding: 20px;
+      width: 200px;
+      box-shadow: 2px 8px 20px rgba(0, 0, 0, 0.1);
+      font-family: var(--font-hand);
+      font-size: 1.5rem;
+      line-height: 1.1;
+      transform: rotate(-2deg);
+      z-index: 10;
+      transition: transform 0.1s, box-shadow 0.2s;
+    }
+
+    .draggable::before {
+      content: '';
+      position: absolute;
+      top: -12px;
+      left: 50%;
+      transform: translateX(-50%) rotate(2deg);
+      width: 80px;
+      height: 24px;
+      background: rgba(255, 255, 255, 0.5);
+      backdrop-filter: blur(4px);
+    }
+
+    .draggable:active {
+      cursor: grabbing;
+      box-shadow: 4px 16px 30px rgba(0, 0, 0, 0.15);
+      z-index: 50;
+      transform: scale(1.05) rotate(0deg) !important;
+    }
+
+    /* --- 6. MOCKUP --- */
+    .mockup-stage {
+      perspective: 2000px;
+      width: 90%;
+      max-width: 1000px;
+      margin-bottom: 100px;
+    }
+
+    .glass-browser {
+      background: rgba(255, 255, 255, 0.4);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.8);
+      border-radius: 16px;
+      box-shadow: 0 40px 100px -20px rgba(0, 0, 0, 0.1), inset 0 0 0 1px rgba(255, 255, 255, 0.5);
+      transform: rotateX(10deg);
+      transition: transform 0.1s;
+      overflow: hidden;
+    }
+
+    .browser-header {
+      padding: 16px 24px;
+      background: rgba(255, 255, 255, 0.5);
+      border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+      display: flex;
+      gap: 8px;
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #E5E5E5;
+    }
+
+    .dot.r {
+      background: #FCA5A5;
+    }
+
+    .dot.y {
+      background: #FDE047;
+    }
+
+    .dot.g {
+      background: #86EFAC;
+    }
+
+    .browser-body {
+      padding: 40px;
+      height: 400px;
+      display: grid;
+      grid-template-columns: 240px 1fr;
+      gap: 40px;
+    }
+
+    .sk-line {
+      height: 12px;
+      background: rgba(0, 0, 0, 0.05);
+      border-radius: 4px;
+      margin-bottom: 12px;
+    }
+
+    .live-graph {
+      width: 100%;
+      height: 200px;
+      margin-top: 20px;
+      position: relative;
+    }
+
+    .graph-path {
+      fill: none;
+      stroke: var(--accent-blue);
+      stroke-width: 3;
+      stroke-dasharray: 1000;
+      stroke-dashoffset: 1000;
+      animation: drawGraph 3s ease-out forwards 1s;
+    }
+
+    /* --- 7. COOLER FEATURES (SPOTLIGHT BENTO) --- */
+    .features {
+      padding: 50px 20px 150px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .bento {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+
+    .card {
+      position: relative;
+      background: #fff;
+      border-radius: 20px;
+      padding: 32px;
+      overflow: hidden;
+      border: 1px solid rgba(0, 0, 0, 0.08);
+      transition: transform 0.2s;
+    }
+
+    /* Spotlight Effect Overlay */
+    .card::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: radial-gradient(600px circle at var(--mouse-x) var(--mouse-y), rgba(37, 99, 235, 0.06), transparent 40%);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .card:hover::after {
+      opacity: 1;
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+    }
+
+    .card.wide {
+      grid-column: span 2;
+    }
+
+    .card-content {
+      position: relative;
+      z-index: 2;
+    }
+
+    .card h3 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .card p {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      line-height: 1.5;
+    }
+
+    .card-visual {
+      height: 120px;
+      background: #FAFAFA;
+      border-radius: 12px;
+      margin-bottom: 24px;
+      border: 1px dashed #E5E5E5;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* --- FEATURE ANIMATIONS --- */
+    /* Sync Animation */
+    .sync-ball {
+      width: 12px;
+      height: 12px;
+      background: var(--accent-blue);
+      border-radius: 50%;
+      position: absolute;
+      left: 20px;
+    }
+
+    .card:hover .sync-ball {
+      animation: pingPong 1.5s infinite ease-in-out;
+    }
+
+    @keyframes pingPong {
+
+      0%,
+      100% {
+        left: 20px;
+      }
+
+      50% {
+        left: calc(100% - 32px);
+      }
+    }
+
+    /* Command K Animation */
+    .cmd-k-ui {
+      width: 80%;
+      height: 40px;
+      background: white;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      color: #ccc;
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      transform: scale(0.9);
+      transition: transform 0.2s;
+    }
+
+    .card:hover .cmd-k-ui {
+      transform: scale(1);
+      border-color: var(--accent-blue);
+      color: var(--text-main);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    }
+
+    /* API Code Animation */
+    .code-scroll {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      color: #666;
+      width: 100%;
+      padding: 10px;
+      position: absolute;
+      top: 0;
+      animation: scrollDown 10s linear infinite;
+      opacity: 0.5;
+    }
+
+    .card:hover .code-scroll {
+      opacity: 1;
+      color: var(--accent-blue);
+    }
+
+    @keyframes scrollDown {
+      from {
+        transform: translateY(-50%);
+      }
+
+      to {
+        transform: translateY(0%);
+      }
+    }
+
+    /* AI Brain Animation */
+    .ai-wave {
+      display: flex;
+      gap: 4px;
+      align-items: center;
+      height: 20px;
+    }
+
+    .bar {
+      width: 6px;
+      background: var(--accent-blue);
+      border-radius: 4px;
+      animation: wave 1s infinite ease-in-out;
+      height: 10px;
+    }
+
+    .card:hover .bar {
+      animation-play-state: running;
+    }
+
+    .bar:nth-child(1) {
+      animation-delay: 0.1s;
+    }
+
+    .bar:nth-child(2) {
+      animation-delay: 0.2s;
+    }
+
+    .bar:nth-child(3) {
+      animation-delay: 0.3s;
+    }
+
+    .bar:nth-child(4) {
+      animation-delay: 0.4s;
+    }
+
+    @keyframes wave {
+
+      0%,
+      100% {
+        height: 10px;
+        opacity: 0.5;
+      }
+
+      50% {
+        height: 30px;
+        opacity: 1;
+      }
+    }
+
+
+    /* --- ANIMATIONS --- */
+    @keyframes blink {
+      50% {
+        opacity: 0;
+      }
+    }
+
+    @keyframes drawGraph {
+      to {
+        stroke-dashoffset: 0;
+      }
+    }
+
+    @keyframes pulseText {
+
+      0%,
+      100% {
+        transform: scale(1);
+      }
+
+      50% {
+        transform: scale(1.1);
+      }
+    }
+
+    @keyframes shake {
+
+      0%,
+      100% {
+        transform: translateX(0);
+      }
+
+      25% {
+        transform: translateX(-5px);
+      }
+
+      75% {
+        transform: translateX(5px);
+      }
+    }
+
+    /* --- RESPONSIVE --- */
+    @media (max-width: 900px) {
+      .bento {
+        grid-template-columns: 1fr;
+      }
+
+      .card.wide {
+        grid-column: span 1;
+      }
+
+      .draggable {
+        display: none;
+      }
+
+      h1 {
+        font-size: 3.5rem;
+      }
+
+      .mockup-stage {
+        display: none;
+      }
+
+      .arrow-pointer {
+        display: none;
+      }
+
+      /* Hide arrow on mobile to save space */
+    }
+  </style>
+</head>
+
+<body>
+  <div class="noise"></div>
+  <div class="vignette"></div>
+  <div class="grid-layer" id="grid"></div>
+
+  <div class="cursor-dot"></div>
+  <div class="cursor-circle"></div>
+
+  <div class="draggable interactable" style="top: 20%; left: 10%; transform: rotate(-4deg);">
+    <span style="color: #EF4444; font-weight: bold;">Priority:</span><br>
+    Ship the new<br>dashboard.
+  </div>
+
+  <div class="draggable interactable" style="top: 25%; right: 10%; background: #F5F5F4; transform: rotate(3deg);">
+    <i class="ph ph-lightning" style="font-size:1.2rem; margin-right:5px;"></i>
+    No more <br> spreadsheets.
+  </div>
+
+  <div class="draggable interactable"
+    style="top: 60%; left: 8%; width:160px; height:160px; padding:10px; background:#fff; transform: rotate(6deg);">
+    <div style="background:#eee; height:85%; width:100%; margin-bottom:8px; display:grid; place-items:center;">
+      <i class="ph-bold ph-chart-line-up" style="font-size:3rem; color:#ccc;"></i>
+    </div>
+    <span
+      style="font-size:1rem; font-family:var(--font-mono); color:#999; display:block; text-align:center;">Q3_growth.png</span>
+  </div>
+
+  <nav class="mag-target">
+    <div class="logo">Scalora_</div>
+    <a href="#features" class="mag-target"
+      style="text-decoration:none; color:var(--text-main); font-size:0.9rem;">Features</a>
+  </nav>
+
+  <section class="hero">
+    <h1>
+      The OS for your<br>
+      <span id="typewriter" class="typewriter"></span>
+    </h1>
+
+    <p class="subtitle">
+      Stop switching between Linear, Notion, and Excel.<br>
+      Scalora connects your roadmap to your burn rate.
+    </p>
+
+    <div class="waitlist-container">
+      <div class="arrow-pointer">
+        <span class="pulse-text">Join Alpha</span>
+        <svg viewBox="0 0 100 50">
+          <path d="M10,10 Q50,0 90,40" stroke="currentColor" fill="none" />
+          <path d="M90,40 L80,30 M90,40 L85,20" stroke="currentColor" fill="none" />
+        </svg>
+      </div>
+      <form class="waitlist-form" onsubmit="event.preventDefault(); simulateSuccess()">
+        <input type="email" placeholder="founder@startup.com" required class="mag-target">
+        <button type="submit" class="btn-primary mag-target">
+          Request Access
+        </button>
+      </form>
+    </div>
+
+    <div class="mockup-stage" id="mockup">
+      <div class="glass-browser">
+        <div class="browser-header">
+          <div class="dot r mag-target"></div>
+          <div class="dot y mag-target"></div>
+          <div class="dot g mag-target"></div>
+        </div>
+        <div class="browser-body">
+          <div style="opacity: 0.6;">
+            <div class="sk-line" style="width: 60%"></div>
+            <div class="sk-line" style="width: 80%"></div>
+            <div class="sk-line" style="width: 40%; margin-top:24px;"></div>
+            <div class="sk-line" style="width: 70%"></div>
+          </div>
+          <div>
+            <div style="display:flex; justify-content:space-between; align-items:flex-end;">
+              <h2 style="font-size:2rem; font-weight:600;">$24,500 <span
+                  style="font-size:1rem; color:#999; font-weight:400;">MRR</span></h2>
+              <div
+                style="background:#DCFCE7; color:#166534; padding:4px 8px; border-radius:6px; font-size:0.8rem; font-weight:600;">
+                +12%</div>
+            </div>
+            <div class="live-graph">
+              <svg width="100%" height="100%" viewBox="0 0 400 200" preserveAspectRatio="none">
+                <defs>
+                  <linearGradient id="grad" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" style="stop-color:rgb(37,99,235);stop-opacity:0.2" />
+                    <stop offset="100%" style="stop-color:rgb(37,99,235);stop-opacity:0" />
+                  </linearGradient>
+                </defs>
+                <path d="M0,180 C50,170 100,100 150,120 S250,50 400,20" fill="url(#grad)" stroke="none" opacity="0.5" />
+                <path class="graph-path" d="M0,180 C50,170 100,100 150,120 S250,50 400,20" />
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="features" id="features">
+    <div class="bento" id="bento-grid">
+
+      <div class="card wide interactable">
+        <div class="card-visual">
+          <div style="width:80%; height:2px; background:#ddd; position:relative;">
+            <div class="sync-ball"></div>
+          </div>
+        </div>
+        <div class="card-content">
+          <h3>Physics-based Sync</h3>
+          <p>Changes ripple through your documents automatically. Connect a Linear issue to a financial projection and
+            watch the math update in real-time.</p>
+        </div>
+      </div>
+
+      <div class="card interactable">
+        <div class="card-visual">
+          <div class="cmd-k-ui">
+            <span style="color:var(--accent-blue); margin-right:8px;">></span> Search...
+            <div style="margin-left:auto; font-size:0.7rem; border:1px solid #eee; padding:2px 4px; border-radius:4px;">
+              ⌘K</div>
+          </div>
+        </div>
+        <div class="card-content">
+          <h3>Command K</h3>
+          <p>Navigate your entire company OS without touching the mouse.</p>
+        </div>
+      </div>
+
+      <div class="card interactable">
+        <div class="card-visual">
+          <div class="ai-wave">
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+          </div>
+        </div>
+        <div class="card-content">
+          <h3>AI Analyst</h3>
+          <p>Don't just store data, query it. "What's our burn rate if we hire two engineers?"</p>
+        </div>
+      </div>
+
+      <div class="card wide interactable">
+        <div class="card-visual" style="align-items: flex-start;">
+          <div class="code-scroll">
+            query { company { runway, burn } }<br>
+            // response: { "runway": "14m" }<br>
+            mutation { hire(role: "eng") }<br>
+            // calculating new projection...<br>
+            query { company { runway, burn } }<br>
+            // response: { "runway": "14m" }<br>
+            mutation { hire(role: "eng") }<br>
+            // calculating new projection...
+          </div>
+        </div>
+        <div class="card-content">
+          <h3>API First</h3>
+          <p>Everything is accessible via GraphQL. Build your own custom dashboards on top of Scalora.</p>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <script>
+    // --- 1. TYPEWRITER ---
+    const words = ["founding journey.", "next big idea.", "seed round."];
+    let i = 0;
+
+    function typeWriter() {
+      const target = document.getElementById("typewriter");
+      const word = words[i % words.length];
+      let charIndex = 0;
+      target.innerHTML = "";
+
+      const type = setInterval(() => {
+        target.innerHTML += word.charAt(charIndex);
+        charIndex++;
+        if (charIndex >= word.length) {
+          clearInterval(type);
+          setTimeout(erase, 2000);
+        }
+      }, 100);
+    }
+    function erase() {
+      const target = document.getElementById("typewriter");
+      let content = target.innerHTML;
+      const erase = setInterval(() => {
+        content = content.substring(0, content.length - 1);
+        target.innerHTML = content;
+        if (content.length === 0) {
+          clearInterval(erase);
+          i++;
+          typeWriter();
+        }
+      }, 50);
+    }
+    setTimeout(typeWriter, 1000);
+
+    // --- 2. CURSOR & PARALLAX ---
+    const cursorDot = document.querySelector('.cursor-dot');
+    const cursorCircle = document.querySelector('.cursor-circle');
+    let mouseX = 0, mouseY = 0;
+    let circleX = 0, circleY = 0;
+
+    window.addEventListener('mousemove', (e) => {
+      mouseX = e.clientX;
+      mouseY = e.clientY;
+      cursorDot.style.transform = `translate(${mouseX - 3}px, ${mouseY - 3}px)`;
+
+      // Grid Parallax
+      const grid = document.getElementById('grid');
+      const xOffset = (window.innerWidth / 2 - mouseX) / 40;
+      const yOffset = (window.innerHeight / 2 - mouseY) / 40;
+      grid.style.transform = `perspective(1000px) rotateX(${yOffset * 0.05}deg) rotateY(${xOffset * 0.05}deg) translate(${xOffset}px, ${yOffset}px)`;
+    });
+
+    function animateCursor() {
+      let distX = mouseX - circleX;
+      let distY = mouseY - circleY;
+      circleX += distX * 0.15;
+      circleY += distY * 0.15;
+      cursorCircle.style.transform = `translate(${circleX - 20}px, ${circleY - 20}px)`;
+      requestAnimationFrame(animateCursor);
+    }
+    animateCursor();
+
+    // Hover Listeners
+    document.querySelectorAll('.interactable, a, button, input').forEach(el => {
+      el.addEventListener('mouseenter', () => document.body.classList.add('hovering'));
+      el.addEventListener('mouseleave', () => document.body.classList.remove('hovering'));
+    });
+    document.querySelectorAll('.mag-target').forEach(el => {
+      el.addEventListener('mouseenter', () => document.body.classList.add('magnetic'));
+      el.addEventListener('mouseleave', () => document.body.classList.remove('magnetic'));
+    });
+
+    // --- 3. SPOTLIGHT BENTO ---
+    const cards = document.querySelectorAll('.card');
+    const bentoGrid = document.getElementById('bento-grid');
+
+    bentoGrid.addEventListener('mousemove', (e) => {
+      cards.forEach(card => {
+        const rect = card.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        card.style.setProperty('--mouse-x', `${x}px`);
+        card.style.setProperty('--mouse-y', `${y}px`);
+      });
+    });
+
+    // --- 4. MOCKUP TILT ---
+    const mockup = document.querySelector('.glass-browser');
+    document.addEventListener('mousemove', (e) => {
+      if (window.innerWidth < 900) return;
+      const xAxis = (window.innerWidth / 2 - e.pageX) / 40;
+      const yAxis = (window.innerHeight / 2 - e.pageY) / 40;
+      mockup.style.transform = `rotateY(${xAxis}deg) rotateX(${10 + yAxis}deg)`;
+    });
+
+    // --- 5. DRAG PHYSICS ---
+    let draggedItem = null;
+    let initialX, initialY;
+    let xOffset = 0, yOffset = 0;
+
+    document.querySelectorAll('.draggable').forEach(item => {
+      item.addEventListener('mousedown', dragStart);
+    });
+
+    function dragStart(e) {
+      initialX = e.clientX - xOffset;
+      initialY = e.clientY - yOffset;
+      if (e.target.closest('.draggable')) {
+        draggedItem = e.target.closest('.draggable');
+        draggedItem.style.zIndex = 100;
+      }
+      document.addEventListener('mouseup', dragEnd);
+      document.addEventListener('mousemove', drag);
+    }
+
+    function drag(e) {
+      if (draggedItem) {
+        e.preventDefault();
+        draggedItem.style.left = `${e.clientX}px`;
+        draggedItem.style.top = `${e.clientY}px`;
+        draggedItem.style.margin = 0;
+        draggedItem.style.transform = 'translate(-50%, -50%) rotate(0deg) scale(1.05)';
+      }
+    }
+
+    function dragEnd() {
+      if (draggedItem) {
+        const r = (Math.random() - 0.5) * 10;
+        draggedItem.style.transform = `translate(-50%, -50%) rotate(${r}deg)`;
+        draggedItem.style.zIndex = 10;
+        draggedItem = null;
+      }
+      document.removeEventListener('mouseup', dragEnd);
+      document.removeEventListener('mousemove', drag);
+    }
+
+    // --- 6. SUCCESS STATE ---
+    function simulateSuccess() {
+      const btn = document.querySelector('.waitlist-form button');
+      const input = document.querySelector('.waitlist-form input');
+      btn.innerHTML = "You're in <i class='ph-bold ph-check'></i>";
+      btn.style.background = "#22C55E";
+      input.disabled = true;
+      btn.style.animation = "shake 0.5s ease-in-out";
+    }
+  </script>
+</body>
+
+</html>
